@@ -23,10 +23,10 @@ services:
     container_name: nutritrack-backend
     environment:
       - FLASK_APP=app.main
-      # --- ADD THE PYTHON PATH ADJUSTMENT LINE HERE ---
       - PYTHONPATH=/app
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://user:password@database:5432/nutritrack
+      # --- UPDATED LINE TO MATCH THE DATABASE TIERS CREDS ---
+      - DATABASE_URL=postgresql://nutri_admin:nutri_password@database:5432/nutritrack_db
     ports:
       - "5000:5000"
     depends_on:
