@@ -26,14 +26,14 @@ pipeline {
         stage('Integration Testing') {
             steps {
                 echo 'Launching application environment stack to execute system health checks...'
-                // ONLY SPIN UP FRONTEND, BACKEND, AND DATABASE. IGNORE THE JENKINS SERVICE CONTAINER.
                 sh 'docker compose up -d frontend backend database'
                 
                 echo 'Waiting for database engine migrations to settle...'
                 sh 'sleep 10'
                 
                 echo 'Executing connection verification handshake...'
-                sh 'curl -f http://localhost:5000/health-check'
+                // CHANGE localhost TO backend SO JENKINS TALKS DIRECTLY TO THE FLASK CONTAINER NETWORK
+                sh 'curl -f http://backend:5000/health-check'
             }
             post {
                 always {
