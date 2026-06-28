@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # --- PRESENTATION TIER (FRONTEND) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nutritrack-frontend
+    ports:
+      - "3000:3000"
+    # Volume mounting passes your local code changes into the container instantly
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+
+  # --- LOGIC TIER (BACKEND) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nutritrack-backend
+    ports:
+      - "5000:5000"
+    # Crucial for hot-reloading: matches your local files to the container's app directory
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - database
+
+  # --- DATA TIER (DATABASE) ---
+  database:
+    image: postgres:15-alpine
+    container_name: nutritrack-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=nutri_admin
+      - POSTGRES_PASSWORD=nutri_password
+      - POSTGRES_DB=nutritrack_db
+    # This automatically runs your init.sql script when the database container starts up
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
