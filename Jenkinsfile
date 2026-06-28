@@ -31,9 +31,9 @@ pipeline {
                 echo 'Waiting for database engine migrations to settle...'
                 sh 'sleep 10'
                 
-                echo 'Executing connection verification handshake...'
-                // CHANGE localhost TO backend SO JENKINS TALKS DIRECTLY TO THE FLASK CONTAINER NETWORK
-                sh 'curl -f http://backend:5000/health-check'
+                echo 'Executing internal connection verification handshake...'
+                // THIS EXECUTES THE CURL COMMAND INSIDE THE BACKEND CONTAINER ITSELF
+                sh 'docker compose exec -T backend curl -f http://localhost:5000/health-check'
             }
             post {
                 always {
