@@ -9,7 +9,6 @@ services:
     container_name: nutritrack-frontend
     ports:
       - "3000:3000"
-    # Volume mounting passes your local code changes into the container instantly
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -24,7 +23,6 @@ services:
     container_name: nutritrack-backend
     ports:
       - "5000:5000"
-    # Crucial for hot-reloading: matches your local files to the container's app directory
     volumes:
       - ./backend:/app
     environment:
@@ -42,10 +40,25 @@ services:
       - POSTGRES_USER=nutri_admin
       - POSTGRES_PASSWORD=nutri_password
       - POSTGRES_DB=nutritrack_db
-    # This automatically runs your init.sql script when the database container starts up
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
 
+  # --- AUTOMATION SERVER (CI/CD) ---
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: nutritrack-jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+# ==============================
+# GLOBAL VOLUMES CONFIGURATION 
+# ==============================
 volumes:
   postgres_data:
+  jenkins_data:
