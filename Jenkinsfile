@@ -41,7 +41,8 @@ pipeline {
                 sh 'docker compose ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                sh 'docker compose exec -T backend curl -f http://localhost:5000/health-check'
+                // SWAPPED CURL FOR A NATIVE PYTHON URLLIB HANDSHAKE
+                sh "docker compose exec -T backend python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)\""
             }
             post {
                 always {
