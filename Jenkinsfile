@@ -41,8 +41,17 @@ pipeline {
                 sh 'docker compose ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                // Clean shell alternative: if curl fails, it prints the server response body text
-                sh 'docker compose exec -T backend curl -fS http://localhost:5000/health-check || (docker compose exec -T backend curl -s http://localhost:5000/health-check && exit 1)'
+                // Native Python execution with clean multi-line readable formatting
+                sh '''docker compose exec -T backend python -c "
+import urllib.request, urllib.error
+try:
+    res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
+    print('SUCCESS: Health check responded with status:', res.status)
+except urllib.error.HTTPError as e:
+    print('!!! HEALTH CHECK FAILED WITH STATUS:', e.code)
+    print(e.read().decode('utf-8', errors='ignore'))
+    exit(1)
+"'''
             }
             post {
                 always {
