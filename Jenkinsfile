@@ -25,18 +25,29 @@ pipeline {
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
-                echo 'Launching application environment stack to execute system health checks...'
-                sh 'docker compose up -d frontend backend database'
+                echo 'Launching database instance first...'
+                sh 'docker compose up -d database'
                 
-                echo 'Waiting for database engine migrations to settle...'
-                sh 'sleep 10'
+                echo 'Waiting for database engine migrations and schema setup to initialize...'
+                sh 'sleep 12'
+                
+                echo 'Launching frontend and backend application layers...'
+                sh 'docker compose up -d frontend backend'
+                
+                echo 'Giving application services a brief moment to bind endpoints...'
+                sh 'sleep 5'
+                
+                echo 'Printing system runtime status check...'
+                sh 'docker compose ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                // THIS EXECUTES THE CURL COMMAND INSIDE THE BACKEND CONTAINER ITSELF
                 sh 'docker compose exec -T backend curl -f http://localhost:5000/health-check'
             }
             post {
                 always {
+                    echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
+                    sh 'docker compose logs backend'
+                    
                     echo 'Cleaning up active test environments...'
                     sh 'docker compose down -v'
                 }
