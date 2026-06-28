@@ -25,8 +25,9 @@ pipeline {
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
-                echo 'Launching environment stack to execute system health checks...'
-                sh 'docker compose up -d'
+                echo 'Launching application environment stack to execute system health checks...'
+                // ONLY SPIN UP FRONTEND, BACKEND, AND DATABASE. IGNORE THE JENKINS SERVICE CONTAINER.
+                sh 'docker compose up -d frontend backend database'
                 
                 echo 'Waiting for database engine migrations to settle...'
                 sh 'sleep 10'
@@ -41,7 +42,6 @@ pipeline {
                 }
             }
         }
-    }
 
     post {
         success {
