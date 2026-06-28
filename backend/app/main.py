@@ -3,6 +3,12 @@ import pandas as pd
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+# Inside app/main.py (or your server setup file)
+from app import app, db
+
+with app.app_context():
+    db.create_all()  # <-- This reads your models and creates the 'vendors' table automatically
+
 app = Flask(__name__)
 
 @app.route('/')
