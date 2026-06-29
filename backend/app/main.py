@@ -19,6 +19,7 @@ def health_check():
         # Establish connection using the credentials from docker-compose
         connection = psycopg2.connect(
             host="database",
+            port=5432,
             database="nutritrack_db",
             user="nutri_admin",
             password="nutri_password"
