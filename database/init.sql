@@ -1,6 +1,16 @@
 -- ====================================================
 -- FORCE RE-INITIALIZATION BOUNDARY
 -- ====================================================
+DROP TABLE IF EXISTS subscription_schedule CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
+DROP TABLE IF EXISTS daily_logs CASCADE;
+DROP TABLE IF EXISTS meal_ingredients CASCADE;
+DROP TABLE IF EXISTS ingredients CASCADE;
+DROP TABLE IF EXISTS meals CASCADE;
+DROP TABLE IF EXISTS vendors CASCADE;
+DROP TABLE IF EXISTS macro_profiles CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 -- ==========================================
 -- NUTRITRACK SYSTEM INITIALIZATION SCHEMA
 -- ==========================================
@@ -80,15 +90,15 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    status VARCHAR(20) DEFAULT 'active' -- active, paused, cancelled
+    status VARCHAR(20) DEFAULT 'active'
 );
 
 CREATE TABLE IF NOT EXISTS subscription_schedule (
     schedule_id SERIAL PRIMARY KEY,
     subscription_id INT REFERENCES subscriptions(subscription_id) ON DELETE CASCADE,
-    delivery_day_of_week INT NOT NULL, -- 1 (Monday) to 7 (Sunday)
+    delivery_day_of_week INT NOT NULL,
     meal_id INT REFERENCES meals(meal_id),
-    delivery_time_slot VARCHAR(20) NOT NULL -- Morning, Afternoon, Evening
+    delivery_time_slot VARCHAR(20) NOT NULL
 );
 
 -- ==========================================
@@ -103,3 +113,8 @@ INSERT INTO meals (vendor_id, name, description, base_price, base_calories, base
 INSERT INTO ingredients (name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) VALUES
 ('Extra Chicken Breast', '50g', 82, 15, 0, 1, 2.50),
 ('Avocado Scoop', '30g', 48, 1, 3, 4, 1.80);
+
+-- FIX: Add explicit seed mappings for the bridge table to close out relational rules cleanly!
+INSERT INTO meal_ingredients (meal_id, ingredient_id, default_quantity) VALUES
+(1, 1, 1),
+(1, 2, 2);
