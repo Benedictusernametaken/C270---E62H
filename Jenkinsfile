@@ -22,21 +22,15 @@ pipeline {
             }
         }
 
-        // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
+// STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                // Ensures any dead locks, metadata, or residual data from past builds are deleted BEFORE booting
                 sh 'docker compose down -v'
 
-                echo 'Launching database instance first...'
-                sh 'docker compose up -d database'
-                
-                echo 'Waiting for database engine migrations and schema setup to initialize...'
-                sh 'sleep 12'
-                
-                echo 'Launching frontend and backend application layers...'
-                sh 'docker compose up -d frontend backend'
+                echo 'Launching all service architecture layers simultaneously...'
+                // Docker Compose handles the startup sequence automatically using the health check
+                sh 'docker compose up -d'
                 
                 echo 'Giving application services a brief moment to bind endpoints...'
                 sh 'sleep 5'

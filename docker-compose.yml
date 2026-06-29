@@ -25,12 +25,12 @@ services:
       - FLASK_APP=app.main
       - PYTHONPATH=/app
       - FLASK_ENV=development
-      # --- UPDATED LINE TO MATCH THE DATABASE TIERS CREDS ---
       - DATABASE_URL=postgresql://nutri_admin:nutri_password@database:5432/nutritrack_db
     ports:
       - "5000:5000"
     depends_on:
-      - database
+      database:
+        condition: service_healthy  # <--- Wait until the database health check passes completely
 
   # --- DATA TIER (DATABASE) ---
   database:
@@ -45,6 +45,11 @@ services:
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:                     # <--- ADD THIS BLOCK
+      test: ["CMD-SHELL", "pg_isready -U nutri_admin -d nutritrack_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
  # --- AUTOMATION SERVER (CI/CD) ---
   jenkins:
