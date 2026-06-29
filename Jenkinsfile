@@ -9,9 +9,8 @@ pipeline {
         // STAGE 1: CLONE & PULL THE REPOSITORY
         stage('Checkout Code') {
             steps {
-                echo 'Wiping stale workspace pieces safely...'
                 // Using docker root to clear root-owned ghost folders if they exist
-                sh 'docker run --rm -v "$(pwd):/workspace" alpine rm -rf /workspace/database/init.sql'
+                // sh 'docker run --rm -v "$(pwd):/workspace" alpine rm -rf /workspace/database/init.sql'
                 
                 echo 'Purging host workspace folder caches entirely...'
                 deleteDir() 
