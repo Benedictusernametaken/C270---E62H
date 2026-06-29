@@ -15,8 +15,7 @@ DROP TABLE IF EXISTS users CASCADE;
 -- NUTRITRACK SYSTEM INITIALIZATION SCHEMA
 -- ==========================================
 
--- 1. USER MANAGEMENT & MACRO CONFIGURATION
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -24,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS macro_profiles (
+CREATE TABLE macro_profiles (
     profile_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     daily_calorie_target INT NOT NULL,
@@ -34,15 +33,14 @@ CREATE TABLE IF NOT EXISTS macro_profiles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. VENDOR PORTAL & MENU ARCHITECTURE
-CREATE TABLE IF NOT EXISTS vendors (
+CREATE TABLE vendors (
     vendor_id SERIAL PRIMARY KEY,
     restaurant_name VARCHAR(100) NOT NULL,
     cuisine_type VARCHAR(50),
     is_verified BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS meals (
+CREATE TABLE meals (
     meal_id SERIAL PRIMARY KEY,
     vendor_id INT REFERENCES vendors(vendor_id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
@@ -54,8 +52,7 @@ CREATE TABLE IF NOT EXISTS meals (
     base_fats INT NOT NULL
 );
 
--- 3. INTERACTIVE MEAL-BUILDER (CRUD) INGREDIENTS
-CREATE TABLE IF NOT EXISTS ingredients (
+CREATE TABLE ingredients (
     ingredient_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     unit VARCHAR(20) DEFAULT 'grams',
@@ -66,15 +63,14 @@ CREATE TABLE IF NOT EXISTS ingredients (
     price_per_unit DECIMAL(10, 2) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS meal_ingredients (
+CREATE TABLE meal_ingredients (
     meal_id INT REFERENCES meals(meal_id) ON DELETE CASCADE,
     ingredient_id INT REFERENCES ingredients(ingredient_id) ON DELETE CASCADE,
     default_quantity INT NOT NULL,
     PRIMARY KEY (meal_id, ingredient_id)
 );
 
--- 4. DAILY FITNESS LOGGING & PROGRESS TRACKING
-CREATE TABLE IF NOT EXISTS daily_logs (
+CREATE TABLE daily_logs (
     log_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     log_date DATE DEFAULT CURRENT_DATE,
@@ -84,8 +80,7 @@ CREATE TABLE IF NOT EXISTS daily_logs (
     total_fats_consumed INT DEFAULT 0
 );
 
--- 5. SCHEDULED SUBSCRIPTION ENGINE
-CREATE TABLE IF NOT EXISTS subscriptions (
+CREATE TABLE subscriptions (
     subscription_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
@@ -93,7 +88,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     status VARCHAR(20) DEFAULT 'active'
 );
 
-CREATE TABLE IF NOT EXISTS subscription_schedule (
+CREATE TABLE subscription_schedule (
     schedule_id SERIAL PRIMARY KEY,
     subscription_id INT REFERENCES subscriptions(subscription_id) ON DELETE CASCADE,
     delivery_day_of_week INT NOT NULL,
@@ -104,18 +99,18 @@ CREATE TABLE IF NOT EXISTS subscription_schedule (
 -- ==========================================
 -- INSERT SEED DATA FOR TESTING
 -- ==========================================
-INSERT INTO vendors (restaurant_name, cuisine_type, is_verified) VALUES 
-('Lean & Mean Kitchen', 'Healthy Western', true);
+-- Manually forcing primary key declarations to guarantee integrity checks clear instantly
+INSERT INTO vendors (vendor_id, restaurant_name, cuisine_type, is_verified) VALUES 
+(1, 'Lean & Mean Kitchen', 'Healthy Western', true);
 
-INSERT INTO meals (vendor_id, name, description, base_price, base_calories, base_protein, base_carbs, base_fats) VALUES 
-(1, 'Sous-Vide Chicken Breast Bowl', 'Fluffy brown rice paired with clean chicken breast and broccoli.', 12.50, 520, 45, 50, 10);
+INSERT INTO meals (meal_id, vendor_id, name, description, base_price, base_calories, base_protein, base_carbs, base_fats) VALUES 
+(1, 1, 'Sous-Vide Chicken Breast Bowl', 'Fluffy brown rice paired with clean chicken breast and broccoli.', 12.50, 520, 45, 50, 10);
 
--- Kept string descriptions safely within the VARCHAR unit field
-INSERT INTO ingredients (name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) VALUES
-('Extra Chicken Breast', '50g', 82, 15, 0, 1, 2.50),
-('Avocado Scoop', '30g', 48, 1, 3, 4, 1.80);
+INSERT INTO ingredients (ingredient_id, name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) VALUES
+(1, 'Extra Chicken Breast', '50g', 82, 15, 0, 1, 2.50),
+(2, 'Avocado Scoop', '30g', 48, 1, 3, 4, 1.80);
 
--- Explicit bridging data to safely clear foreign key validation loops
+-- Explicitly mapped links matching our fixed IDs
 INSERT INTO meal_ingredients (meal_id, ingredient_id, default_quantity) VALUES
-(1, 1, 50),
-(1, 2, 30);
+(1, 1, 1),
+(1, 2, 1);
