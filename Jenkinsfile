@@ -25,6 +25,10 @@ pipeline {
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
+                echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
+                // Ensures any dead locks, metadata, or residual data from past builds are deleted BEFORE booting
+                sh 'docker compose down -v'
+
                 echo 'Launching database instance first...'
                 sh 'docker compose up -d database'
                 
@@ -41,7 +45,6 @@ pipeline {
                 sh 'docker compose ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                // Native Python execution with clean multi-line readable formatting
                 sh '''docker compose exec -T backend python -c "
 import urllib.request, urllib.error
 try:
