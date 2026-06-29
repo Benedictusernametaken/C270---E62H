@@ -31,6 +31,10 @@ pipeline {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
                 sh 'docker compose down -v'
 
+                echo '🧹 FORCE PURGING ANY STICKY HOST GHOST DIRECTORIES...'
+                // This forces the runner machine to smash the ghost folder out of the workspace
+                sh 'rm -rf database/init.sql'
+
                 echo 'Launching all service architecture layers simultaneously...'
                 // Docker Compose handles the startup sequence automatically using the health check
                 sh 'docker compose up -d database frontend backend'
