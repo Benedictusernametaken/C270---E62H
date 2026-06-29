@@ -1,9 +1,9 @@
-from flask import Flask, jsonify
+from flask import jsonify
 import pandas as pd
 import psycopg2
 from psycopg2.extras import RealDictCursor
-
-app = Flask(__name__)
+# Import the shared master app instance from your package folder
+from app import app 
 
 @app.route('/')
 def home():
@@ -12,7 +12,6 @@ def home():
         "message": "Welcome to the NutriTrack Backend API Tiers!"
     })
 
-# --- THIS IS THE NEW REPLACED BLOCK ---
 @app.route('/health-check')
 def health_check():
     connection = None
@@ -28,7 +27,7 @@ def health_check():
         
         # Query the seed data we injected into init.sql
         cursor.execute("SELECT * FROM vendors;")
-        db_vendors = cursor.fetchall()
+        db_vendors = cursor.fetchall()  # Fixed indentation!
         
         cursor.close()
         return jsonify({
@@ -46,7 +45,6 @@ def health_check():
     finally:
         if connection:
             connection.close()
-# --- END OF REPLACED BLOCK ---
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
