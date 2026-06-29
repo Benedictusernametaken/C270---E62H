@@ -54,6 +54,9 @@ except urllib.error.HTTPError as e:
                 always {
                     echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
                     sh 'docker compose logs backend'
+
+                    echo '=== DIAGNOSTIC: CAPTURING DATABASE INITIALIZATION LOGS ==='
+                    sh 'docker compose logs database'
                     
                     echo 'Cleaning up active test environments...'
                     sh 'docker compose down -v'
