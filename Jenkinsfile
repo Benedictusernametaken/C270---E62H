@@ -9,6 +9,9 @@ pipeline {
         // STAGE 1: CLONE & PULL THE REPOSITORY
         stage('Checkout Code') {
             steps {
+                echo 'Purging host workspace folder caches entirely...'
+                deleteDir() // 👈 This wipes the workspace clean so no ghost folders exist
+
                 echo 'Pulling the latest codebase from the develop branch...'
                 checkout scm
             }
