@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS users CASCADE;
 -- NUTRITRACK SYSTEM INITIALIZATION SCHEMA
 -- ==========================================
 
--- 1. USER MANAGEMENT & MACRO CONFIGURATION (Member 1 & 4)
+-- 1. USER MANAGEMENT & MACRO CONFIGURATION
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS macro_profiles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. VENDOR PORTAL & MENU ARCHITECTURE (Member 2 & 5)
+-- 2. VENDOR PORTAL & MENU ARCHITECTURE
 CREATE TABLE IF NOT EXISTS vendors (
     vendor_id SERIAL PRIMARY KEY,
     restaurant_name VARCHAR(100) NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS meals (
     base_fats INT NOT NULL
 );
 
--- 3. INTERACTIVE MEAL-BUILDER (CRUD) INGREDIENTS (Member 3)
+-- 3. INTERACTIVE MEAL-BUILDER (CRUD) INGREDIENTS
 CREATE TABLE IF NOT EXISTS ingredients (
     ingredient_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS meal_ingredients (
     PRIMARY KEY (meal_id, ingredient_id)
 );
 
--- 4. DAILY FITNESS LOGGING & PROGRESS TRACKING (Member 4)
+-- 4. DAILY FITNESS LOGGING & PROGRESS TRACKING
 CREATE TABLE IF NOT EXISTS daily_logs (
     log_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS daily_logs (
     total_fats_consumed INT DEFAULT 0
 );
 
--- 5. SCHEDULED SUBSCRIPTION ENGINE (Member 6)
+-- 5. SCHEDULED SUBSCRIPTION ENGINE
 CREATE TABLE IF NOT EXISTS subscriptions (
     subscription_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
@@ -110,11 +110,12 @@ INSERT INTO vendors (restaurant_name, cuisine_type, is_verified) VALUES
 INSERT INTO meals (vendor_id, name, description, base_price, base_calories, base_protein, base_carbs, base_fats) VALUES 
 (1, 'Sous-Vide Chicken Breast Bowl', 'Fluffy brown rice paired with clean chicken breast and broccoli.', 12.50, 520, 45, 50, 10);
 
+-- Kept string descriptions safely within the VARCHAR unit field
 INSERT INTO ingredients (name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) VALUES
 ('Extra Chicken Breast', '50g', 82, 15, 0, 1, 2.50),
 ('Avocado Scoop', '30g', 48, 1, 3, 4, 1.80);
 
--- FIX: Add explicit seed mappings for the bridge table to close out relational rules cleanly!
+-- Explicit bridging data to safely clear foreign key validation loops
 INSERT INTO meal_ingredients (meal_id, ingredient_id, default_quantity) VALUES
-(1, 1, 1),
-(1, 2, 2);
+(1, 1, 50),
+(1, 2, 30);
