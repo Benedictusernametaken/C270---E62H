@@ -25,7 +25,7 @@ services:
       - FLASK_APP=app.main
       - PYTHONPATH=/app
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://nutri_admin:nutri_password@database:5432/nutritrack_db
+      - DATABASE_URL=postgresql://nutri_admin:your_secure_password@database:5432/nutritrack
     ports:
       - "5000:5000"
     depends_on:
@@ -39,8 +39,8 @@ services:
       dockerfile: Dockerfile
     container_name: nutritrack-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_USER: nutri_admin
+      POSTGRES_PASSWORD: your_secure_password
       POSTGRES_DB: nutritrack
     ports:
       - "5432:5432"
