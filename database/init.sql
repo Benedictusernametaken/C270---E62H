@@ -1,5 +1,5 @@
 -- ====================================================
--- FORCE RE-INITIALIZATION BOUNDARY
+-- FORCE RE-INITIALIZATION CLEANUP
 -- ====================================================
 DROP TABLE IF EXISTS subscription_schedule CASCADE;
 DROP TABLE IF EXISTS subscriptions CASCADE;
@@ -11,9 +11,9 @@ DROP TABLE IF EXISTS vendors CASCADE;
 DROP TABLE IF EXISTS macro_profiles CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- ==========================================
--- NUTRITRACK SYSTEM INITIALIZATION SCHEMA
--- ==========================================
+-- ====================================================
+-- SYSTEM SCHEMA CREATION
+-- ====================================================
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
@@ -96,21 +96,26 @@ CREATE TABLE subscription_schedule (
     delivery_time_slot VARCHAR(20) NOT NULL
 );
 
--- ==========================================
--- INSERT SEED DATA FOR TESTING
--- ==========================================
--- Manually forcing primary key declarations to guarantee integrity checks clear instantly
-INSERT INTO vendors (vendor_id, restaurant_name, cuisine_type, is_verified) VALUES 
-(1, 'Lean & Mean Kitchen', 'Healthy Western', true);
+-- ====================================================
+-- RE-INJECT TEST SEED DATA (EXPLICIT ID MAPPING)
+-- ====================================================
 
-INSERT INTO meals (meal_id, vendor_id, name, description, base_price, base_calories, base_protein, base_carbs, base_fats) VALUES 
-(1, 1, 'Sous-Vide Chicken Breast Bowl', 'Fluffy brown rice paired with clean chicken breast and broccoli.', 12.50, 520, 45, 50, 10);
+-- 1. Insert Vendor
+INSERT INTO vendors (vendor_id, restaurant_name, cuisine_type, is_verified) 
+VALUES (1, 'Lean & Mean Kitchen', 'Healthy Western', true);
 
-INSERT INTO ingredients (ingredient_id, name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) VALUES
+-- 2. Insert Meal linked to Vendor 1
+INSERT INTO meals (meal_id, vendor_id, name, description, base_price, base_calories, base_protein, base_carbs, base_fats) 
+VALUES (1, 1, 'Sous-Vide Chicken Breast Bowl', 'Fluffy brown rice paired with clean chicken breast and broccoli.', 12.50, 520, 45, 50, 10);
+
+-- 3. Insert Ingredients with explicit sequence IDs
+INSERT INTO ingredients (ingredient_id, name, unit, calories_per_unit, protein_per_unit, carbs_per_unit, fats_per_unit, price_per_unit) 
+VALUES 
 (1, 'Extra Chicken Breast', '50g', 82, 15, 0, 1, 2.50),
 (2, 'Avocado Scoop', '30g', 48, 1, 3, 4, 1.80);
 
--- Explicitly mapped links matching our fixed IDs
-INSERT INTO meal_ingredients (meal_id, ingredient_id, default_quantity) VALUES
+-- 4. Map bridge records securely
+INSERT INTO meal_ingredients (meal_id, ingredient_id, default_quantity) 
+VALUES 
 (1, 1, 1),
 (1, 2, 1);
