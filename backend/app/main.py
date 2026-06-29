@@ -1,6 +1,7 @@
 from flask import jsonify
 import pandas as pd
 import psycopg2
+import os
 from psycopg2.extras import RealDictCursor
 # Import the shared master app instance from your package folder
 from app import app 
@@ -16,14 +17,12 @@ def home():
 def health_check():
     connection = None
     try:
-        # Establish connection using the credentials from docker-compose
-        connection = psycopg2.connect(
-            host="database",
-            port=5432,
-            database="nutritrack_db",
-            user="nutri_admin",
-            password="nutri_password"
+        # 2. REPLACE THE OLD psycopg2.connect BLOCK WITH THIS:
+        db_url = os.environ.get(
+            "DATABASE_URL", 
+            "postgresql://nutri_admin:your_secure_password@database:5432/nutritrack_db"
         )
+        connection = psycopg2.connect(db_url)
         cursor = connection.cursor(cursor_factory=RealDictCursor)
         
         # Query the seed data we injected into init.sql
