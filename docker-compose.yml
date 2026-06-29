@@ -34,14 +34,16 @@ services:
 
   # --- DATA TIER (DATABASE) ---
   database:
-    image: postgres:15-alpine
+    build:
+      context: ./database
+      dockerfile: Dockerfile
     container_name: nutritrack-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: nutritrack
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=nutri_admin
-      - POSTGRES_PASSWORD=nutri_password
-      - POSTGRES_DB=nutritrack_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

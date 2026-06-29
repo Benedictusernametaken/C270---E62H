@@ -24,7 +24,7 @@ pipeline {
         stage('Docker Compile') {
             steps {
                 echo 'Orchestrating container builds via Docker Compose...'
-                sh 'docker compose build --no-cache'
+                sh 'docker compose build --no-cache --pull'
             }
         }
 
