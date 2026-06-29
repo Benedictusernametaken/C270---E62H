@@ -9,8 +9,12 @@ pipeline {
         // STAGE 1: CLONE & PULL THE REPOSITORY
         stage('Checkout Code') {
             steps {
+                echo 'Wiping stale workspace pieces safely...'
+                // Using docker root to clear root-owned ghost folders if they exist
+                sh 'docker run --rm -v "$(pwd):/workspace" alpine rm -rf /workspace/database/setup.sql'
+                
                 echo 'Purging host workspace folder caches entirely...'
-                deleteDir() // 👈 This wipes the workspace clean so no ghost folders exist
+                deleteDir() 
 
                 echo 'Pulling the latest codebase from the develop branch...'
                 checkout scm
@@ -25,15 +29,11 @@ pipeline {
             }
         }
 
-// STAGE 3: RUN INTEGRATION & HEALTH CHECKS
+        // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
                 sh 'docker compose down -v'
-
-                echo '🧹 FORCE PURGING ANY STICKY HOST GHOST DIRECTORIES...'
-                // This forces the runner machine to smash the ghost folder out of the workspace
-                sh 'rm -rf database/init.sql'
 
                 echo 'Launching all service architecture layers simultaneously...'
                 // Docker Compose handles the startup sequence automatically using the health check
