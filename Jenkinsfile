@@ -30,7 +30,7 @@ pipeline {
 
                 echo 'Launching all service architecture layers simultaneously...'
                 // Docker Compose handles the startup sequence automatically using the health check
-                sh 'docker compose up -d'
+                sh 'docker compose up -d database frontend backend'
                 
                 echo 'Giving application services a brief moment to bind endpoints...'
                 sh 'sleep 5'
