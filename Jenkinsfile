@@ -28,6 +28,9 @@ pipeline {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
                 sh 'docker compose down -v'
 
+                // Add this defensive boundary to clear out any accidental folder created by Docker
+                sh 'rm -rf database/init.sql && git checkout database/init.sql'
+
                 echo 'Launching all service architecture layers simultaneously...'
                 // Docker Compose handles the startup sequence automatically using the health check
                 sh 'docker compose up -d database frontend backend'
