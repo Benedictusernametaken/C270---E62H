@@ -43,7 +43,7 @@ services:
       - POSTGRES_PASSWORD=nutri_password
       - POSTGRES_DB=nutritrack_db
     volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nutri_admin -d nutritrack_db"]
