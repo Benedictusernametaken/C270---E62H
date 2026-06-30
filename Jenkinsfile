@@ -70,6 +70,7 @@ except urllib.error.HTTPError as e:
     exit(1)
 "'''
             }
+            // This post block is local to Stage 3 only (Perfect for log cleanups)
             post {
                 always {
                     echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
@@ -85,21 +86,14 @@ except urllib.error.HTTPError as e:
         }
     }
 
-    // Add this section to post status back to GitHub
+    // 🌟 UNIFIED GLOBAL POST BLOCK (Merged GitHub notifications and console echoes)
     post {
         success {
             githubNotify status: 'SUCCESS', description: 'Pipeline Passed!'
-        }
-        failure {
-            githubNotify status: 'FAILURE', description: 'Pipeline Failed!'
-        }
-    }
-
-    post {
-        success {
             echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
         }
         failure {
+            githubNotify status: 'FAILURE', description: 'Pipeline Failed!'
             echo "❌ Build #${BUILD_NUMBER} Failed! Check the logs or integration test diagnostics above."
         }
     }
