@@ -1,0 +1,16 @@
+# =========================================================================
+# CODE OWNERS CONFIGURATION
+# Any PR modifying these files requires explicit approval from the architect.
+# =========================================================================
+
+# The CI/CD pipeline infrastructure
+/Jenkinsfile                    @Benedictusernametaken
+
+# The local and staging container architecture configurations
+/docker-compose.yml              @Benedictusernametaken
+/backend/Dockerfile             @Benedictusernametaken
+/frontend/Dockerfile            @Benedictusernametaken
+/database/Dockerfile            @Benedictusernametaken
+
+# Global repository workflows
+/.github/workflows/             @Benedictusernametaken

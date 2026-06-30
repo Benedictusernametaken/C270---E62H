@@ -1,0 +1,20 @@
+# =========================================================================
+# SYSTEM & ENVIRONMENT EXCLUSIONS
+# =========================================================================
+
+# Block local environment variables containing passwords
+.env
+.env*
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node caches
+node_modules/
+npm-debug.log*
+
+# OS caches
+.DS_Store
+Thumbs.db
