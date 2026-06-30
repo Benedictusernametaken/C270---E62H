@@ -85,6 +85,16 @@ except urllib.error.HTTPError as e:
         }
     }
 
+    // Add this section to post status back to GitHub
+    post {
+        success {
+            githubNotify status: 'SUCCESS', description: 'Pipeline Passed!'
+        }
+        failure {
+            githubNotify status: 'FAILURE', description: 'Pipeline Failed!'
+        }
+    }
+
     post {
         success {
             echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
