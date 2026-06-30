@@ -1,21 +1,34 @@
 pipeline {
     agent any
 
+    // 🔒 Concurrent build protection: drops a build in queue if a teammate pushes to the same branch right after
+    options {
+        disableConcurrentBuilds()
+    }
+
     environment {
         APP_NAME = 'nutritrack'
+        // 1. 🔒 SECURITY LOCKDOWN: Inject the DB credentials dynamically out of Jenkins Secret Store
+        // Create a 'Secret Text' credential in Jenkins called 'nutritrack-db-password'
+        POSTGRES_USER     = 'nutri_admin'
+        POSTGRES_PASSWORD = credentials('nutritrack-db-password') 
+        POSTGRES_DB       = 'nutritrack_db'
+        
+        // App runtime environments
+        FLASK_APP         = 'app.main'
+        FLASK_ENV         = 'development'
+        PYTHONPATH        = '/app'
     }
 
     stages {
         // STAGE 1: CLONE & PULL THE REPOSITORY
         stage('Checkout Code') {
             steps {
-                // Using docker root to clear root-owned ghost folders if they exist
-                // sh 'docker run --rm -v "$(pwd):/workspace" alpine rm -rf /workspace/database/init.sql'
-                
                 echo 'Purging host workspace folder caches entirely...'
                 deleteDir() 
 
-                echo 'Pulling the latest codebase from the develop branch...'
+                // Dynamically show exactly who pushed what branch
+                echo "Pulling the latest codebase from branch: ${env.BRANCH_NAME ?: 'Target Branch'}..."
                 checkout scm
             }
         }
@@ -24,6 +37,7 @@ pipeline {
         stage('Docker Compile') {
             steps {
                 echo 'Orchestrating container builds via Docker Compose...'
+                // Pass environment variables seamlessly to the compose build context
                 sh 'docker compose build --no-cache --pull'
             }
         }
@@ -35,17 +49,17 @@ pipeline {
                 sh 'docker compose down -v'
 
                 echo 'Launching all service architecture layers simultaneously...'
-                // Docker Compose handles the startup sequence automatically using the health check
-                sh 'docker compose up -d database frontend backend'
+                // Using the -p flag isolates this team build instance from other projects on the server
+                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend'
                 
                 echo 'Giving application services a brief moment to bind endpoints...'
                 sh 'sleep 5'
                 
                 echo 'Printing system runtime status check...'
-                sh 'docker compose ps'
+                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                sh '''docker compose exec -T backend python -c "
+                sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
 import urllib.request, urllib.error
 try:
     res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
@@ -59,13 +73,13 @@ except urllib.error.HTTPError as e:
             post {
                 always {
                     echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
-                    sh 'docker compose logs backend'
+                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs backend'
 
                     echo '=== DIAGNOSTIC: CAPTURING DATABASE INITIALIZATION LOGS ==='
-                    sh 'docker compose logs database'
+                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs database'
                     
                     echo 'Cleaning up active test environments...'
-                    sh 'docker compose down -v'
+                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} down -v'
                 }
             }
         }
@@ -73,10 +87,10 @@ except urllib.error.HTTPError as e:
 
     post {
         success {
-            echo '🎉 Build Passed! The 3-tier architecture is verified and secure.'
+            echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
         }
         failure {
-            echo '❌ Build Failed! Check the compilation logs or integration curl output above.'
+            echo "❌ Build #${BUILD_NUMBER} Failed! Check the logs or integration test diagnostics above."
         }
     }
 }
