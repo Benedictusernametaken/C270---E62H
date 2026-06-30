@@ -89,11 +89,25 @@ except urllib.error.HTTPError as e:
     // 🌟 UNIFIED GLOBAL POST BLOCK (Merged GitHub notifications and console echoes)
     post {
         success {
-            githubNotify status: 'SUCCESS', description: 'Pipeline Passed!'
+            githubNotify(
+            context: 'Jenkins CI/CD Pipeline',
+            description: 'Build passed successfully!',
+            status: 'SUCCESS',
+            account: 'Benedictusernametaken',
+            repo: 'C270---E62H',
+            sha: env.GIT_COMMIT
+        )
             echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
         }
         failure {
-            githubNotify status: 'FAILURE', description: 'Pipeline Failed!'
+            githubNotify(
+            context: 'Jenkins CI/CD Pipeline',
+            description: 'Pipeline Failed!',
+            status: 'FAILURE',
+            account: 'Benedictusernametaken',
+            repo: 'C270---E62H',
+            sha: env.GIT_COMMIT
+        )
             echo "❌ Build #${BUILD_NUMBER} Failed! Check the logs or integration test diagnostics above."
         }
     }
