@@ -90,6 +90,7 @@ except urllib.error.HTTPError as e:
     post {
         success {
             githubNotify(
+            credentialsId: 'github-token',
             context: 'Jenkins CI/CD Pipeline',
             description: 'Build passed successfully!',
             status: 'SUCCESS',
@@ -101,6 +102,7 @@ except urllib.error.HTTPError as e:
         }
         failure {
             githubNotify(
+            credentialsId: 'github-token',
             context: 'Jenkins CI/CD Pipeline',
             description: 'Pipeline Failed!',
             status: 'FAILURE',
