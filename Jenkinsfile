@@ -96,7 +96,7 @@ except urllib.error.HTTPError as e:
             status: 'SUCCESS',
             account: 'Benedictusernametaken',
             repo: 'C270---E62H',
-            sha: env.GIT_COMMIT
+            sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
         )
             echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
         }
@@ -108,7 +108,7 @@ except urllib.error.HTTPError as e:
             status: 'FAILURE',
             account: 'Benedictusernametaken',
             repo: 'C270---E62H',
-            sha: env.GIT_COMMIT
+            sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
         )
             echo "❌ Build #${BUILD_NUMBER} Failed! Check the logs or integration test diagnostics above."
         }
