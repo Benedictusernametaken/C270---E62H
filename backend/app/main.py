@@ -39,8 +39,7 @@ def health_check():
     except Exception as e:
         return jsonify({
             "status": "degraded",
-            "database_connectivity": f"FAILED: {str(e)}"
-        }), 500
+          \
         
     finally:
         if connection:
