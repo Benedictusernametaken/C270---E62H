@@ -11,5 +11,9 @@
         state: present
         pull: always
         recreate: always
+        services:
+          - nutritrack-frontend
+          - nutritrack-backend
+          - nutritrack-database
 
 #Test comment
