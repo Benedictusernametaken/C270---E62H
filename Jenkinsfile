@@ -95,7 +95,7 @@ except urllib.error.HTTPError as e:
                 echo '🚀 Initiating Automated Ansible Deployment...'
                 
                 // Runs the optimized playbook using the repository configuration
-                sh 'ansible-playbook -i hosts.ini ansible/deploy.yml'
+                sh "ansible-playbook -i hosts.ini ansible/deploy.yml -e 'app_workspace=${WORKSPACE}'"
             }
         }
     }
