@@ -2,7 +2,7 @@
 - name: Deploy Nutritrack Application via Docker Compose
   hosts: localhost
   gather_facts: yes
-  become: yes
+  become: no
 
   tasks:  # ◄ Defined ONLY ONCE at the top of your execution list
     - name: Ensure Docker and dependencies are installed
