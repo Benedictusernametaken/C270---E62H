@@ -1,34 +1,13 @@
 ---
 - name: Deploy Nutritrack Application via Docker Compose
   hosts: localhost
-  gather_facts: yes
+  gather_facts: no
   become: no
 
   tasks:
-    # 🌟 Removed the apt installation task entirely to bypass container permission limits
-    - name: Ensure the permanent application folder exists
-      ansible.builtin.file:
-        path: /opt/nutritrack
-        state: directory
-        mode: '0755'
-        owner: root
-        group: root
-
-    - name: Synchronize repository context (excluding heavy virtual environment files)
-      ansible.posix.synchronize:
-        src: "{{ playbook_dir }}/../"
-        dest: /opt/nutritrack/
-        delete: yes
-        rsync_opts:
-          - "--exclude=.git"
-          - "--exclude=.venv"
-          - "--exclude=env"
-          - "--exclude=__pycache__"
-          - "--exclude=.pytest_cache"
-
-    - name: Pull latest images and spin up the Docker Compose container network
+    - name: Deploy application stack directly via Docker daemon
       community.docker.docker_compose_v2:
-        project_src: /opt/nutritrack
+        project_src: "/var/lib/docker/volumes/c270---e62h_jenkins_data/_data/workspace/ultibranch_feature_ansible-fresh"
         state: present
         pull: always
         recreate: always
