@@ -4,16 +4,8 @@
   gather_facts: yes
   become: no
 
-  tasks:  # ◄ Defined ONLY ONCE at the top of your execution list
-    - name: Ensure Docker and dependencies are installed
-      ansible.builtin.apt:
-        name:
-          - docker.io
-          - docker-compose-v2
-          - rsync
-        state: present
-        update_cache: yes
-
+  tasks:
+    # 🌟 Removed the apt installation task entirely to bypass container permission limits
     - name: Ensure the permanent application folder exists
       ansible.builtin.file:
         path: /opt/nutritrack
@@ -25,8 +17,8 @@
     - name: Synchronize repository context (excluding heavy virtual environment files)
       ansible.posix.synchronize:
         src: "{{ playbook_dir }}/../"
-        dest: /var/jenkins_home/workspace/ultibranch_feature_ansible-fresh/../../../../../opt/nutritrack/ # Resolves local relative workspace paths cleanly
-        delete: yes  # Automatically cleans up deleted files from the target directory
+        dest: /opt/nutritrack/
+        delete: yes
         rsync_opts:
           - "--exclude=.git"
           - "--exclude=.venv"
@@ -39,4 +31,4 @@
         project_src: /opt/nutritrack
         state: present
         pull: always
-        recreate: always   # ◄ Forces Docker to shift containers from "Created" to "Running"
+        recreate: always
