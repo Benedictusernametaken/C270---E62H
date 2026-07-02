@@ -88,7 +88,19 @@ except urllib.error.HTTPError as e:
                 }
             }
         }
+
+        // STAGE 4: RUN ANSIBLE PLAYBOOK 
+        stage('Deploy Application via Ansible') {
+            steps {
+                echo '🚀 Initiating Automated Ansible Deployment...'
+                
+                // Runs the optimized playbook using the repository configuration
+                sh "ansible-playbook -i hosts.ini ansible/deploy.yml -e 'app_workspace=${WORKSPACE}'"
+            }
+        }
     }
+
+    
 
     // 🌟 UNIFIED GLOBAL POST BLOCK (Merged GitHub notifications and console echoes)
     post {

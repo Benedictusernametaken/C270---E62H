@@ -1,3 +1,5 @@
+name: nutritrack  # ◄ Forces Docker to ALWAYS prefix volumes with 'nutritrack_' everywhere
+
 services:
   # --- PRESENTATION TIER (FRONTEND) ---
   frontend:

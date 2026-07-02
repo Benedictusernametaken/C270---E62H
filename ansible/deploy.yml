@@ -1,0 +1,19 @@
+---
+- name: Deploy Nutritrack Application via Docker Compose
+  hosts: localhost
+  gather_facts: no
+  become: no
+
+  tasks:
+    - name: Deploy application stack directly via Docker daemon
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_workspace }}"
+        state: present
+        pull: always
+        recreate: always
+        services:
+          - frontend
+          - backend
+          - database
+
+#Test comment
