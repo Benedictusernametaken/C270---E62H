@@ -36,6 +36,10 @@ pipeline {
         // STAGE 2: COMPILE & BUILD CONTAINERS
         stage('Docker Compile') {
             steps {
+                echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose conflicting containers...'
+                // This clears out any stale or crashed container using those exact static names before rebuilding
+                sh 'docker rm -f nutritrack-frontend nutritrack-backend nutritrack-database || true'
+
                 echo 'Orchestrating container builds via Docker Compose...'
                 // Pass environment variables seamlessly to the compose build context
                 sh 'docker compose build --no-cache --pull'
@@ -90,31 +94,27 @@ except urllib.error.HTTPError as e:
     post {
         success {
             githubNotify(
-            credentialsId: 'github-token',
-            context: 'Jenkins CI/CD Pipeline',
-            description: 'Build passed successfully!',
-            status: 'SUCCESS',
-            account: 'Benedictusernametaken',
-            repo: 'C270---E62H',
-            sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-        )
+                credentialsId: 'github-token',
+                context: 'Jenkins CI/CD Pipeline',
+                description: 'Build passed successfully!',
+                status: 'SUCCESS',
+                account: 'Benedictusernametaken',
+                repo: 'C270---E62H',
+                sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+            )
             echo "🎉 Build #${BUILD_NUMBER} Passed! The 3-tier architecture is verified and secure."
         }
         failure {
             githubNotify(
-            credentialsId: 'github-token',
-            context: 'Jenkins CI/CD Pipeline',
-            description: 'Pipeline Failed!',
-            status: 'FAILURE',
-            account: 'Benedictusernametaken',
-            repo: 'C270---E62H',
-            sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-        )
+                credentialsId: 'github-token',
+                context: 'Jenkins CI/CD Pipeline',
+                description: 'Pipeline Failed!',
+                status: 'FAILURE',
+                account: 'Benedictusernametaken',
+                repo: 'C270---E62H',
+                sha: env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+            )
             echo "❌ Build #${BUILD_NUMBER} Failed! Check the logs or integration test diagnostics above."
         }
     }
 }
-
-// Test comment: Verifying automated GitHub Webhook integration
-// Gatekeeper
-// Re-created a fresh feature branch for pull request and jenkins testing
