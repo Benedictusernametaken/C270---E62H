@@ -94,8 +94,8 @@ except urllib.error.HTTPError as e:
             steps {
                 echo '🚀 Initiating Automated Ansible Deployment...'
                 
-                // Runs the optimized playbook using the repository configuration
-                sh 'ansible-playbook -i hosts.ini ansible/deploy.yml'
+                // This spins up a temporary lightweight ansible container, mounts your workspace, and runs your playbook safely
+                sh 'docker run --rm -v ${WORKSPACE}:/workspace -w /workspace cytopia/ansible ansible-playbook -i hosts.ini ansible/deploy.yml'
             }
         }
     }
