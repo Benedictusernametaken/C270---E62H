@@ -39,4 +39,4 @@
         project_src: /opt/nutritrack
         state: present
         pull: always
-        recreate: always   # ◄ Forces Docker to shift containers from "Created" to "Running"
+        recreate: always   # ◄ Forces Docker to shift containers from "Created" to "Runnin
