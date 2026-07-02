@@ -12,8 +12,8 @@
         pull: always
         recreate: always
         services:
-          - nutritrack-frontend
-          - nutritrack-backend
-          - nutritrack-database
+          - frontend
+          - backend
+          - database
 
 #Test comment
