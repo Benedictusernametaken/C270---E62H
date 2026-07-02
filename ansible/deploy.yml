@@ -7,7 +7,7 @@
   tasks:
     - name: Deploy application stack directly via Docker daemon
       community.docker.docker_compose_v2:
-        project_src: "/var/lib/docker/volumes/c270---e62h_jenkins_data/_data/workspace/ultibranch_feature_ansible-fresh"
+        project_src: "/var/lib/docker/volumes/c270---e62h_jenkins_data/_data/workspace/multibranch_feature_ansible-fresh"
         state: present
         pull: always
         recreate: always
