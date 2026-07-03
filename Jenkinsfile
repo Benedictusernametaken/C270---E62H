@@ -50,7 +50,8 @@ pipeline {
         stage('Integration Testing') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                sh 'docker rm -f ${APP_NAME}_${BUILD_NUMBER}-frontend-1 ${APP_NAME}_${BUILD_NUMBER}-backend-1 ${APP_NAME}_${BUILD_NUMBER}-database-1 || true'
+                // This targets both the flat names AND the dynamically suffixed names in one shot
+                sh 'docker rm -f nutritrack-frontend nutritrack-backend nutritrack-database nutritrack_${BUILD_NUMBER}-frontend-1 nutritrack_${BUILD_NUMBER}-backend-1 nutritrack_${BUILD_NUMBER}-database-1 || true'
 
                 echo 'Launching all service architecture layers simultaneously...'
                 // Using the -p flag isolates this team build instance from other projects on the server
