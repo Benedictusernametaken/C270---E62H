@@ -47,47 +47,58 @@ pipeline {
         }
 
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
-        stage('Integration Testing') {
-            steps {
-                echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                sh 'docker rm -f nutritrack-frontend nutritrack-backend || true'
+stage('Integration Testing') {
+    steps {
+        echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose conflicting containers...'
+        // 1. Swapped to double-quotes and updated to match the project name format
+        sh "docker rm -f ${APP_NAME}_${BUILD_NUMBER}-frontend-1 ${APP_NAME}_${BUILD_NUMBER}-backend-1 ${APP_NAME}_${BUILD_NUMBER}-database-1 || true"
 
-                echo 'Launching all service architecture layers simultaneously...'
-                // Using the -p flag isolates this team build instance from other projects on the server
-                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend'
-                
-                echo 'Giving application services a brief moment to bind endpoints...'
-                sh 'sleep 5'
-                
-                echo 'Printing system runtime status check...'
-                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps'
-                
-                echo 'Executing internal connection verification handshake...'
-                sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
+        echo 'Orchestrating container builds via Docker Compose...'
+        // 2. Swapped to double-quotes and added the -p flag so images compile into the correct namespace
+        sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} build --no-cache --pull"
+
+        echo 'Launching all service architecture layers simultaneously...'
+        // 3. Swapped to double-quotes so Jenkins resolves the environment variables properly
+        sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend"
+        
+        echo 'Giving application services a brief moment to bind endpoints...'
+        sh 'sleep 5'
+        
+        echo 'Printing system runtime status check...'
+        // 4. Swapped to double-quotes
+        sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps"
+        
+        echo 'Executing internal connection verification handshake...'
+        // 5. Mixed style: Double quotes wrapped around triple single-quotes to protect the internal Python code strings
+        sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c '''
 import urllib.request, urllib.error
 try:
-    res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
-    print('SUCCESS: Health check responded with status:', res.status)
+    res = urllib.request.urlopen(\'http://localhost:5000/health-check\', timeout=5)
+    print(\'SUCCESS: Health check responded with status:\', res.status)
 except urllib.error.HTTPError as e:
-    print('!!! HEALTH CHECK FAILED WITH STATUS:', e.code)
-    print(e.read().decode('utf-8', errors='ignore'))
+    print(\'!!! HEALTH CHECK FAILED WITH STATUS:\', e.code)
+    print(e.read().decode(\'utf-8\', errors=\'ignore\'))
     exit(1)
-"'''
-            }
-            // This post block is local to Stage 3 only (Perfect for log cleanups)
-            post {
-                always {
-                    echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
-                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs backend'
+'''"
+    }
 
-                    echo '=== DIAGNOSTIC: CAPTURING DATABASE INITIALIZATION LOGS ==='
-                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs database'
-                    
-                    echo 'Cleaning up active test environments...'
-                    sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} down -v'
-                }
+    // This post block is local to Stage 3 only (Perfect for log cleanups)
+    post {
+        always {
+            // 6. Wrapped all post block shell actions in a node block to guarantee an active workspace context path
+            node {
+                echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
+                sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs backend"
+
+                echo '=== DIAGNOSTIC: CAPTURING DATABASE INITIALIZATION LOGS ==='
+                sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs database"
+                
+                echo 'Cleaning up active test environments...'
+                sh "docker compose -p ${APP_NAME}_${BUILD_NUMBER} down -v"
             }
         }
+    }
+}
 
         // STAGE 4: RUN ANSIBLE PLAYBOOK 
         stage('Deploy Application via Ansible') {
