@@ -64,17 +64,16 @@ pipeline {
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                // Clean, single-quoted block. Jenkins passes this directly to bash without quote clashing
-                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
-        import urllib.request, urllib.error
-        try:
-            res = urllib.request.urlopen(\'http://localhost:5000/health-check\', timeout=5)
-            print(\'SUCCESS: Health check responded with status:\', res.status)
-        except urllib.error.HTTPError as e:
-            print(\'!!! HEALTH CHECK FAILED WITH STATUS:\', e.code)
-            print(e.read().decode(\'utf-8\', errors=\'ignore\'))
-            exit(1)
-        "'
+                    sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
+import urllib.request, urllib.error
+try:
+    res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
+    print('SUCCESS: Health check responded with status:', res.status)
+except urllib.error.HTTPError as e:
+    print('!!! HEALTH CHECK FAILED WITH STATUS:', e.code)
+    print(e.read().decode('utf-8', errors='ignore'))
+    exit(1)
+"'''
             }
 
             post {
