@@ -6,7 +6,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: nutritrack-frontend
     ports:
       - "3000:3000"
     volumes:
@@ -20,7 +19,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: nutritrack-backend
     environment:
       - FLASK_APP=app.main
       - PYTHONPATH=/app
@@ -37,7 +35,6 @@ services:
     build:
       context: ./database
       dockerfile: Dockerfile
-    container_name: nutritrack-database
     environment:
       POSTGRES_USER: nutri_admin
       POSTGRES_PASSWORD: your_secure_password

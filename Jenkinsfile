@@ -49,33 +49,34 @@ pipeline {
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
-                echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                // This targets both the flat names AND the dynamically suffixed names in one shot
-                sh 'docker rm -f nutritrack-frontend nutritrack-backend nutritrack-database nutritrack_${BUILD_NUMBER}-frontend-1 nutritrack_${BUILD_NUMBER}-backend-1 nutritrack_${BUILD_NUMBER}-database-1 || true'
+                echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose project containers...'
+                // Wipes out any previous running instances of THIS build number to start completely fresh
+                sh 'docker rm -f nutritrack_${BUILD_NUMBER}-frontend-1 nutritrack_${BUILD_NUMBER}-backend-1 nutritrack_${BUILD_NUMBER}-database-1 || true'
 
-                echo 'Launching all service architecture layers simultaneously...'
-                // Using the -p flag isolates this team build instance from other projects on the server
+                echo 'Launching isolated service architecture layers...'
+                // The single quotes allow Docker Compose to read your OS environment metrics directly
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend'
                 
                 echo 'Giving application services a brief moment to bind endpoints...'
-                sh 'sleep 5'
+                sh 'sleep 10' // Increased to 10s to give the database engine enough breathing room to boot up
                 
                 echo 'Printing system runtime status check...'
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
-import urllib.request, urllib.error
-try:
-    res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
-    print('SUCCESS: Health check responded with status:', res.status)
-except urllib.error.HTTPError as e:
-    print('!!! HEALTH CHECK FAILED WITH STATUS:', e.code)
-    print(e.read().decode('utf-8', errors='ignore'))
-    exit(1)
-"'''
+                // Clean, single-quoted block. Jenkins passes this directly to bash without quote clashing
+                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
+        import urllib.request, urllib.error
+        try:
+            res = urllib.request.urlopen(\'http://localhost:5000/health-check\', timeout=5)
+            print(\'SUCCESS: Health check responded with status:\', res.status)
+        except urllib.error.HTTPError as e:
+            print(\'!!! HEALTH CHECK FAILED WITH STATUS:\', e.code)
+            print(e.read().decode(\'utf-8\', errors=\'ignore\'))
+            exit(1)
+        "'
             }
-            // This post block is local to Stage 3 only (Perfect for log cleanups)
+
             post {
                 always {
                     echo '=== CAPTURING BACKEND CONTAINER RUNTIME LOGS ==='
