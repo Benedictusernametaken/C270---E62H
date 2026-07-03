@@ -51,8 +51,8 @@ pipeline {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose project containers...'
                 // Wipes out any previous running instances of THIS build number to start completely fresh
-                sh 'docker rm -f nutritrack_${BUILD_NUMBER}-frontend-1 nutritrack_${BUILD_NUMBER}-backend-1 nutritrack_${BUILD_NUMBER}-database-1 || true'
-
+                sh 'docker rm -f nutritrack_${BUILD_NUMBER}-frontend* nutritrack_${BUILD_NUMBER}-backend* nutritrack_${BUILD_NUMBER}-database* || true'
+                
                 echo 'Launching isolated service architecture layers...'
                 // The single quotes allow Docker Compose to read your OS environment metrics directly
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend'
