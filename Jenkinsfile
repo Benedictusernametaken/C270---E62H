@@ -36,12 +36,11 @@ pipeline {
         // STAGE 2: COMPILE & BUILD CONTAINERS
         stage('Docker Compile') {
             steps {
-                echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose conflicting containers...'
-                // This clears out any stale or crashed container using those exact static names before rebuilding
-                sh 'docker rm -f nutritrack-frontend nutritrack-backend nutritrack-database || true'
+                echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose project builds...'
+                // Clean up using compose to target the default project context safely
+                sh 'docker compose down --volumes --remove-orphans || true'
 
                 echo 'Orchestrating container builds via Docker Compose...'
-                // Pass environment variables seamlessly to the compose build context
                 sh 'docker compose build --no-cache --pull'
             }
         }
@@ -49,28 +48,32 @@ pipeline {
         // STAGE 3: RUN INTEGRATION & HEALTH CHECKS
         stage('Integration Testing') {
             steps {
-                echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose project containers...'
-                sh 'docker rm -f nutritrack-frontend* nutritrack-backend* nutritrack-database* || true'
+                echo '🧹 DEFENSIVE CLEANUP: Purging any existing containers for this specific build number...'
+                // Explicitly target this build's project name to ensure a blank slate
+                sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} down -v --remove-orphans || true'
 
                 echo 'Launching isolated service architecture layers...'
-                // The single quotes allow Docker Compose to read your OS environment metrics directly
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} up -d database frontend backend'
                 
                 echo 'Giving application services a brief moment to bind endpoints...'
-                sh 'sleep 10' // Increased to 10s to give the database engine enough breathing room to boot up
+                sh 'sleep 10' 
                 
                 echo 'Printing system runtime status check...'
                 sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} ps'
                 
                 echo 'Executing internal connection verification handshake...'
-                    sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
+                // Added a fallback to port 5000 check. Ensure your Flask app is running on 0.0.0.0:5000 inside the Dockerfile
+                sh '''docker compose -p ${APP_NAME}_${BUILD_NUMBER} exec -T backend python -c "
 import urllib.request, urllib.error
 try:
-    res = urllib.request.urlopen('http://localhost:5000/health-check', timeout=5)
+    res = urllib.request.urlopen('http://127.0.0.1:5000/health-check', timeout=5)
     print('SUCCESS: Health check responded with status:', res.status)
 except urllib.error.HTTPError as e:
     print('!!! HEALTH CHECK FAILED WITH STATUS:', e.code)
     print(e.read().decode('utf-8', errors='ignore'))
+    exit(1)
+except Exception as e:
+    print('!!! CONNECTION FAILED:', str(e))
     exit(1)
 "'''
             }
@@ -84,10 +87,12 @@ except urllib.error.HTTPError as e:
                     sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} logs database'
                     
                     echo 'Cleaning up active test environments...'
+                    // Keep this intact so it leaves no footprint on your Jenkins agent machine
                     sh 'docker compose -p ${APP_NAME}_${BUILD_NUMBER} down -v'
                 }
             }
         }
+    
 
         // STAGE 4: RUN ANSIBLE PLAYBOOK 
         stage('Deploy Application via Ansible') {
