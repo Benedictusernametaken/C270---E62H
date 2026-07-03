@@ -51,7 +51,7 @@ stage('Integration Testing') {
     steps {
         echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose conflicting containers...'
         // 1. Swapped to double-quotes and updated to match the project name format
-        sh "docker rm -f ${APP_NAME}_${BUILD_NUMBER}-frontend-1 ${APP_NAME}_${BUILD_NUMBER}-backend-1 ${APP_NAME}_${BUILD_NUMBER}-database-1 || true"
+        sh "docker rm -f \$(docker ps -a -q --filter label=com.docker.compose.project=${APP_NAME}_${BUILD_NUMBER}) || true"
 
         echo 'Orchestrating container builds via Docker Compose...'
         // 2. Swapped to double-quotes and added the -p flag so images compile into the correct namespace
