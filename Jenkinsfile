@@ -50,7 +50,7 @@ pipeline {
         stage('Integration Testing') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                sh 'docker compose down -v'
+                sh 'docker rm -f nutritrack-frontend nutritrack-backend || true'
 
                 echo 'Launching all service architecture layers simultaneously...'
                 // Using the -p flag isolates this team build instance from other projects on the server

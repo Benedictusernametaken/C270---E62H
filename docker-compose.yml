@@ -37,7 +37,7 @@ services:
     build:
       context: ./database
       dockerfile: Dockerfile
-    container_name: nutritrack-db
+    container_name: nutritrack-database
     environment:
       POSTGRES_USER: nutri_admin
       POSTGRES_PASSWORD: your_secure_password
