@@ -50,7 +50,7 @@ pipeline {
         stage('Integration Testing') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale persistent volume caches...'
-                sh 'docker rm -f ${APP_NAME}_${BUILD_NUMBER}-frontend ${APP_NAME}_${BUILD_NUMBER}-backend ${APP_NAME}_${BUILD_NUMBER}-database || true'
+                sh 'docker rm -f ${APP_NAME}-frontend ${APP_NAME}-backend ${APP_NAME}-database || true'
 
                 echo 'Launching all service architecture layers simultaneously...'
                 // Using the -p flag isolates this team build instance from other projects on the server
