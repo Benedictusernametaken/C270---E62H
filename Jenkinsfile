@@ -37,10 +37,15 @@ pipeline {
         stage('Docker Compile') {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Stripping any existing loose project builds...'
-                // Clean up using compose to target the default project context safely
-                sh 'docker compose down --volumes --remove-orphans || true'
+                
+                // 1. Force down the default project context with a short timeout to prevent hanging
+                sh 'docker compose down --volumes --remove-orphans --timeout 5 || true'
+                
+                // 2. Clear out any dangling builder cache that might be corrupted or frozen
+                sh 'docker builder prune -f --filter "until=24h" || true'
 
                 echo 'Orchestrating container builds via Docker Compose...'
+                // 3. Explicitly point to your compose file if it lives in a subfolder (e.g., -f docker-compose.yml)
                 sh 'docker compose build --no-cache --pull'
             }
         }
