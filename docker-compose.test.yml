@@ -1,0 +1,18 @@
+# docker-compose.test.yml
+#
+# Override applied ONLY for the Jenkins "Integration Testing" stage.
+# Strips host port publishing so the test stack (-p nutritrack_test) can
+# never collide with the production stack's ports (3000/5000/5432) on
+# the same host. Services still reach each other fine over the internal
+# Compose network by service name (database:5432, backend:5000) — the
+# Jenkinsfile only needs `docker compose exec`, not host access.
+
+services:
+  frontend:
+    ports: []
+
+  backend:
+    ports: []
+
+  database:
+    ports: []

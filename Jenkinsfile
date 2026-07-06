@@ -14,6 +14,10 @@ pipeline {
         FLASK_APP         = 'app.main'
         FLASK_ENV         = 'production'
         PYTHONPATH        = '/app'
+
+        // Both files combined so the test stack inherits the base service
+        // definitions but drops host port publishing (see docker-compose.test.yml)
+        COMPOSE_TEST_FILES = '-f docker-compose.yml -f docker-compose.test.yml'
     }
 
     stages {
@@ -31,19 +35,19 @@ pipeline {
             steps {
                 echo '🧹 DEFENSIVE CLEANUP: Wiping any stale test containers...'
                 // Using "-p ${APP_NAME}_test" guarantees this command ONLY touches test setups
-                sh 'docker compose -p ${APP_NAME}_test down -v --remove-orphans || true'
+                sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test down -v --remove-orphans || true'
 
                 echo 'Building and starting test containers...'
-                sh 'docker compose -p ${APP_NAME}_test build --no-cache'
-                sh 'docker compose -p ${APP_NAME}_test up -d database frontend'
+                sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test build --no-cache'
+                sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test up -d database frontend'
                 
                 echo 'Waiting for test database initialization...'
                 sh 'sleep 10'
                 
-                sh 'docker compose -p ${APP_NAME}_test up -d backend'
+                sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test up -d backend'
 
                 echo 'Checking container status before proceeding...'
-                sh 'docker compose -p ${APP_NAME}_test ps'
+                sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test ps'
 
                 echo 'Running internal verification handshake (with retries)...'
                 sh '''
@@ -54,7 +58,7 @@ pipeline {
 
                     for i in $(seq 1 $ATTEMPTS); do
                         echo "Attempt $i/$ATTEMPTS..."
-                        if docker compose -p ${APP_NAME}_test exec -T backend python -c "
+                        if docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test exec -T backend python -c "
 import urllib.request, urllib.error
 try:
     res = urllib.request.urlopen('http://127.0.0.1:5000/health-check', timeout=5)
@@ -79,12 +83,12 @@ except Exception as e:
             post {
                 always {
                     echo '--- CAPTURING BACKEND LOGS (post-attempt, for diagnostics) ---'
-                    sh 'docker compose -p ${APP_NAME}_test logs backend > backend_debug.log 2>&1 || true'
+                    sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test logs backend > backend_debug.log 2>&1 || true'
                     sh 'cat backend_debug.log || true'
                     archiveArtifacts artifacts: 'backend_debug.log', allowEmptyArchive: true
 
                     echo 'Cleaning up isolated test architecture environment...'
-                    sh 'docker compose -p ${APP_NAME}_test down -v --remove-orphans || true'
+                    sh 'docker compose ${COMPOSE_TEST_FILES} -p ${APP_NAME}_test down -v --remove-orphans || true'
                 }
             }
         }
@@ -93,7 +97,8 @@ except Exception as e:
         stage('Deploy to Production') {
             steps {
                 echo 'Cleaning up and starting production services...'
-                // Runs standard compose without -p for production, keeping it safe from test wipes
+                // Runs standard compose without -p and without the test override,
+                // so it uses real host ports (3000/5000/5432) as intended for production
                 sh '''
                     docker compose down --remove-orphans || true
                     docker compose pull || true
