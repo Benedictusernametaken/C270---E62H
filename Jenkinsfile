@@ -12,7 +12,7 @@ pipeline {
         POSTGRES_DB       = 'nutritrack_db'
         
         FLASK_APP         = 'app.main'
-        FLASK_ENV         = 'development'
+        FLASK_ENV         = 'production'
         PYTHONPATH        = '/app'
     }
 
@@ -42,28 +42,49 @@ pipeline {
                 
                 sh 'docker compose -p ${APP_NAME}_test up -d backend'
 
+                echo 'Checking container status before proceeding...'
+                sh 'docker compose -p ${APP_NAME}_test ps'
+
+                echo 'Running internal verification handshake (with retries)...'
                 sh '''
-                    echo "--- CAPTURING BACKEND LOGS ---"
-                    docker compose -p nutritrack_test logs backend > backend_debug.log 2>&1
-                    cat backend_debug.log
-                    echo "--- END OF LOGS ---"
-                '''
-                
-                echo 'Running internal verification handshake...'
-                sh '''docker compose -p ${APP_NAME}_test exec -T backend python -c "
+                    echo "--- WAITING FOR BACKEND TO BECOME READY ---"
+                    ATTEMPTS=10
+                    SLEEP_SECONDS=3
+                    SUCCESS=0
+
+                    for i in $(seq 1 $ATTEMPTS); do
+                        echo "Attempt $i/$ATTEMPTS..."
+                        if docker compose -p ${APP_NAME}_test exec -T backend python -c "
 import urllib.request, urllib.error
 try:
     res = urllib.request.urlopen('http://127.0.0.1:5000/health-check', timeout=5)
     print('SUCCESS: Health check responded with status:', res.status)
+    exit(0)
 except Exception as e:
-    print('!!! HEALTH CHECK FAILED:', str(e))
+    print('Not ready yet:', str(e))
     exit(1)
-"'''
+"; then
+                            SUCCESS=1
+                            break
+                        fi
+                        sleep $SLEEP_SECONDS
+                    done
+
+                    if [ "$SUCCESS" -ne 1 ]; then
+                        echo "!!! BACKEND FAILED TO BECOME HEALTHY AFTER $ATTEMPTS ATTEMPTS !!!"
+                        exit 1
+                    fi
+                '''
             }
             post {
                 always {
+                    echo '--- CAPTURING BACKEND LOGS (post-attempt, for diagnostics) ---'
+                    sh 'docker compose -p ${APP_NAME}_test logs backend > backend_debug.log 2>&1 || true'
+                    sh 'cat backend_debug.log || true'
+                    archiveArtifacts artifacts: 'backend_debug.log', allowEmptyArchive: true
+
                     echo 'Cleaning up isolated test architecture environment...'
-                    sh 'docker compose -p ${APP_NAME}_test down -v'
+                    sh 'docker compose -p ${APP_NAME}_test down -v --remove-orphans || true'
                 }
             }
         }
