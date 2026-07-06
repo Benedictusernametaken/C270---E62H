@@ -15,9 +15,10 @@ pipeline {
         FLASK_ENV         = 'production'
         PYTHONPATH        = '/app'
 
-        // Both files combined so the test stack inherits the base service
-        // definitions but drops host port publishing (see docker-compose.test.yml)
-        COMPOSE_TEST_FILES = '-f docker-compose.yml -f docker-compose.test.yml'
+        // Explicitly naming ONLY the base file disables Compose's automatic
+        // merge of docker-compose.override.yml, so the test stack never
+        // inherits host port bindings (see docker-compose.override.yml).
+        COMPOSE_TEST_FILES = '-f docker-compose.yml'
     }
 
     stages {
@@ -97,8 +98,8 @@ except Exception as e:
         stage('Deploy to Production') {
             steps {
                 echo 'Cleaning up and starting production services...'
-                // Runs standard compose without -p and without the test override,
-                // so it uses real host ports (3000/5000/5432) as intended for production
+                // No -f flags here, so Compose auto-merges docker-compose.yml +
+                // docker-compose.override.yml and gets real host ports as intended.
                 sh '''
                     docker compose down --remove-orphans || true
                     docker compose pull || true

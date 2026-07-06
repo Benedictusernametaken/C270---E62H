@@ -6,8 +6,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -24,8 +22,6 @@ services:
       - PYTHONPATH=/app
       - FLASK_ENV=development
       - DATABASE_URL=postgresql://nutri_admin:${POSTGRES_PASSWORD}@database:5432/nutritrack_db
-    ports:
-      - "5000:5000"
     depends_on:
       database:
         condition: service_healthy
@@ -39,8 +35,6 @@ services:
       POSTGRES_USER: nutri_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: nutritrack_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
